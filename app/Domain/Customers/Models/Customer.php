@@ -1,0 +1,51 @@
+<?php
+
+namespace App\Domain\Customers\Models;
+
+use App\Domain\Customers\Models\CreditProfile;
+use App\Domain\Mandates\Models\Mandate;
+use App\Domain\Merchants\Models\Merchant;
+use App\Domain\Payments\Models\Payment;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+
+class Customer extends Model
+{
+    protected $fillable = [
+        'merchant_id',
+        'email',
+        'phone',
+        'first_name',
+        'last_name',
+        'billing_address_json',
+        'external_woocommerce_user_id',
+        'status',
+        'lock_reason',
+    ];
+
+    protected $casts = [
+        'billing_address_json' => 'array',
+    ];
+
+    public function merchant(): BelongsTo
+    {
+        return $this->belongsTo(Merchant::class);
+    }
+
+    public function creditProfile(): HasOne
+    {
+        return $this->hasOne(CreditProfile::class);
+    }
+
+    public function mandates(): HasMany
+    {
+        return $this->hasMany(Mandate::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+}
