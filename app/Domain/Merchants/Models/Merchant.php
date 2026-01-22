@@ -13,6 +13,11 @@ class Merchant extends Model
         'name',
         'plan',
         'status',
+        'settings_json',
+    ];
+
+    protected $casts = [
+        'settings_json' => 'array',
     ];
 
     public function sites(): HasMany

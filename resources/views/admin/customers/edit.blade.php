@@ -28,7 +28,7 @@
         @csrf
         <label for="status">Status</label>
         <select id="status" name="status">
-            @foreach (['active', 'locked', 'blocked'] as $status)
+            @foreach (['active', 'restricted', 'locked', 'blocked'] as $status)
                 <option value="{{ $status }}" @selected($customer->status === $status)>{{ ucfirst($status) }}</option>
             @endforeach
         </select>

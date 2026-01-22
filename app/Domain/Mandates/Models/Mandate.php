@@ -23,6 +23,9 @@ class Mandate extends Model
         'consent_ip',
         'consent_user_agent',
         'status',
+        'addacs_code',
+        'addacs_description',
+        'reported_at',
     ];
 
     protected $casts = [
@@ -31,6 +34,7 @@ class Mandate extends Model
         'account_number' => 'encrypted',
         'bank_address_json' => 'array',
         'consent_timestamp' => 'datetime',
+        'reported_at' => 'datetime',
     ];
 
     public function merchant(): BelongsTo

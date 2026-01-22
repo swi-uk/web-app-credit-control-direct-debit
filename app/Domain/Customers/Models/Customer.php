@@ -23,10 +23,12 @@ class Customer extends Model
         'billing_address_json',
         'status',
         'lock_reason',
+        'locked_at',
     ];
 
     protected $casts = [
         'billing_address_json' => 'array',
+        'locked_at' => 'datetime',
     ];
 
     public function merchant(): BelongsTo

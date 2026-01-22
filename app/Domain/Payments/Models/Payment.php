@@ -24,12 +24,21 @@ class Payment extends Model
         'due_date',
         'status',
         'retry_count',
+        'advance_notice_sent_at',
+        'advance_notice_channel',
+        'failure_code',
+        'failure_description',
+        'reported_at',
+        'next_retry_at',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'due_date' => 'date',
         'retry_count' => 'integer',
+        'advance_notice_sent_at' => 'datetime',
+        'reported_at' => 'datetime',
+        'next_retry_at' => 'datetime',
     ];
 
     public function merchant(): BelongsTo

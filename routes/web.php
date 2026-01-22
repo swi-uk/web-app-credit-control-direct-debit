@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\BacsReportController;
 use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\SiteController;
 use App\Http\Controllers\DdiController;
 use Illuminate\Support\Facades\Route;
@@ -16,4 +18,9 @@ Route::prefix('admin')->group(function () {
     Route::get('customers', [CustomerController::class, 'index'])->name('admin.customers.index');
     Route::get('customers/{customer}/edit', [CustomerController::class, 'edit'])->name('admin.customers.edit');
     Route::post('customers/{customer}', [CustomerController::class, 'update'])->name('admin.customers.update');
+
+    Route::get('payments', [PaymentController::class, 'index'])->name('admin.payments.index');
+
+    Route::get('bacs-reports/upload', [BacsReportController::class, 'create'])->name('admin.bacs.upload');
+    Route::post('bacs-reports/upload', [BacsReportController::class, 'store']);
 });

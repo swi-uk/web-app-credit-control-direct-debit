@@ -17,12 +17,18 @@ class CustomerController extends Controller
     {
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $customers = Customer::with('creditProfile')->orderBy('email')->get();
+        $filter = $request->query('filter');
+        $query = Customer::with('creditProfile')->orderBy('email');
+        if ($filter === 'locked') {
+            $query->whereIn('status', ['locked', 'restricted']);
+        }
+        $customers = $query->get();
 
         return view('admin.customers.index', [
             'customers' => $customers,
+            'filter' => $filter,
         ]);
     }
 
@@ -53,6 +59,12 @@ class CustomerController extends Controller
 
         $customer->status = $validated['status'];
         $customer->lock_reason = $validated['lock_reason'] ?? null;
+        if ($customer->status === 'locked' && !$customer->locked_at) {
+            $customer->locked_at = now();
+        }
+        if ($customer->status !== 'locked') {
+            $customer->locked_at = null;
+        }
         $customer->save();
 
         $creditProfile = $customer->creditProfile ?: new CreditProfile(['customer_id' => $customer->id]);

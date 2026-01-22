@@ -14,6 +14,7 @@ class CreditProfile extends Model
         'current_exposure_amount',
         'days_max',
         'days_default',
+        'lock_reason',
     ];
 
     protected $casts = [
