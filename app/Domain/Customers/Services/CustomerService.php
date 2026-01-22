@@ -7,11 +7,15 @@ use App\Domain\Customers\Models\CreditProfile;
 use App\Domain\Customers\Models\Customer;
 use App\Domain\Integrations\Models\ExternalLink;
 use App\Domain\Merchants\Models\Merchant;
+use App\Domain\Credit\Services\CreditTierService;
 use App\Domain\Merchants\Models\MerchantSite;
 use Illuminate\Support\Arr;
 
 class CustomerService
 {
+    public function __construct(private readonly CreditTierService $creditTierService)
+    {
+    }
     public function upsertFromChannel(Merchant $merchant, MerchantSite $site, array $payload): Customer
     {
         $email = $payload['email'] ?? null;
@@ -45,6 +49,7 @@ class CustomerService
         }
 
         $this->ensureCreditProfile($customer);
+        $this->creditTierService->assignTier($customer);
 
         return $customer->fresh(['creditProfile']);
     }
@@ -67,6 +72,11 @@ class CustomerService
                 'current_exposure_amount' => 0,
                 'days_max' => 14,
                 'days_default' => 14,
+                'manual_tier_override' => false,
+                'manual_limit_override' => false,
+                'manual_days_override' => false,
+                'successful_collections' => 0,
+                'bounces_60d' => 0,
             ]);
             $creditProfile->save();
         }

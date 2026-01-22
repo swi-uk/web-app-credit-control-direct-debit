@@ -6,8 +6,10 @@ use App\Domain\Customers\Models\Customer;
 use App\Domain\Mandates\Models\Mandate;
 use App\Domain\Merchants\Models\Merchant;
 use App\Domain\Merchants\Models\MerchantSite;
+use App\Domain\Refunds\Models\RefundRequest;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Payment extends Model
 {
@@ -59,5 +61,10 @@ class Payment extends Model
     public function sourceSite(): BelongsTo
     {
         return $this->belongsTo(MerchantSite::class, 'source_site_id');
+    }
+
+    public function refundRequests(): HasMany
+    {
+        return $this->hasMany(RefundRequest::class);
     }
 }

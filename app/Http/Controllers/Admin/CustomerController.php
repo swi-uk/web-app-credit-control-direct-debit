@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Credit\Services\CreditTierService;
 use App\Domain\Customers\Models\Customer;
 use App\Domain\Customers\Models\CreditProfile;
+use App\Domain\Credit\Models\CreditTier;
 use App\Domain\Integrations\Models\ExternalLink;
 use App\Domain\Webhooks\Services\WebhookOutboxService;
 use Illuminate\Http\RedirectResponse;
@@ -13,8 +15,10 @@ use Illuminate\View\View;
 
 class CustomerController extends Controller
 {
-    public function __construct(private readonly WebhookOutboxService $webhookOutboxService)
-    {
+    public function __construct(
+        private readonly WebhookOutboxService $webhookOutboxService,
+        private readonly CreditTierService $creditTierService
+    ) {
     }
 
     public function index(Request $request): View
@@ -40,10 +44,21 @@ class CustomerController extends Controller
             ->where('entity_id', $customer->id)
             ->orderBy('merchant_site_id')
             ->get();
+        $tiers = CreditTier::where('merchant_id', $customer->merchant_id)
+            ->orderBy('priority')
+            ->get();
+        $profile = $customer->creditProfile;
+        $effectiveLimit = $profile ? $this->creditTierService->getEffectiveLimit($profile) : null;
+        $effectiveDays = $profile ? $this->creditTierService->getEffectiveDaysMax($profile) : null;
+        $accountAgeDays = $customer->created_at ? $customer->created_at->diffInDays(now()) : 0;
 
         return view('admin.customers.edit', [
             'customer' => $customer,
             'externalLinks' => $externalLinks,
+            'tiers' => $tiers,
+            'effectiveLimit' => $effectiveLimit,
+            'effectiveDays' => $effectiveDays,
+            'accountAgeDays' => $accountAgeDays,
         ]);
     }
 
@@ -55,6 +70,7 @@ class CustomerController extends Controller
             'days_max' => ['required', 'integer'],
             'days_default' => ['nullable', 'integer'],
             'lock_reason' => ['nullable', 'string', 'max:255'],
+            'credit_tier_id' => ['nullable', 'exists:credit_tiers,id'],
         ]);
 
         $customer->status = $validated['status'];
@@ -75,7 +91,18 @@ class CustomerController extends Controller
         } elseif (!$creditProfile->days_default) {
             $creditProfile->days_default = 14;
         }
+        $creditProfile->manual_tier_override = $request->boolean('manual_tier_override');
+        $creditProfile->manual_limit_override = $request->boolean('manual_limit_override');
+        $creditProfile->manual_days_override = $request->boolean('manual_days_override');
+        if ($creditProfile->manual_tier_override && $request->filled('credit_tier_id')) {
+            $creditProfile->credit_tier_id = $request->input('credit_tier_id');
+            $creditProfile->tier_assigned_at = now();
+        }
         $creditProfile->save();
+
+        if (!$creditProfile->manual_tier_override) {
+            $this->creditTierService->assignTier($customer);
+        }
 
         $customer->merchant?->sites?->each(function ($site) use ($customer, $creditProfile) {
             $externalLink = ExternalLink::where('merchant_site_id', $site->id)

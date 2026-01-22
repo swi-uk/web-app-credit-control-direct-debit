@@ -5,6 +5,10 @@ namespace App\Domain\Customers\Models;
 use App\Domain\Customers\Models\CreditProfile;
 use App\Domain\Integrations\Models\ExternalLink;
 use App\Domain\Mandates\Models\Mandate;
+use App\Domain\Mandates\Models\MandateUpdateLink;
+use App\Domain\Portal\Models\CustomerPortalToken;
+use App\Domain\Refunds\Models\RefundRequest;
+use App\Domain\Documents\Models\Document;
 use App\Domain\Merchants\Models\Merchant;
 use App\Domain\Payments\Models\Payment;
 use Illuminate\Database\Eloquent\Model;
@@ -55,5 +59,25 @@ class Customer extends Model
     {
         return $this->hasMany(ExternalLink::class, 'entity_id')
             ->where('entity_type', 'customer');
+    }
+
+    public function portalTokens(): HasMany
+    {
+        return $this->hasMany(CustomerPortalToken::class);
+    }
+
+    public function refundRequests(): HasMany
+    {
+        return $this->hasMany(RefundRequest::class);
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(Document::class);
+    }
+
+    public function mandateUpdateLinks(): HasMany
+    {
+        return $this->hasMany(MandateUpdateLink::class);
     }
 }

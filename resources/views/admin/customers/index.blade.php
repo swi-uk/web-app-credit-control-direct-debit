@@ -15,6 +15,9 @@
         <a href="{{ route('admin.customers.index') }}">All</a> |
         <a href="{{ route('admin.customers.index', ['filter' => 'locked']) }}">Locked / Restricted</a>
     </p>
+    <p>
+        <a href="{{ route('admin.export.customers') }}">Export customers CSV</a>
+    </p>
     <table>
         <thead>
             <tr>

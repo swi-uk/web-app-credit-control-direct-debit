@@ -10,4 +10,6 @@ return [
     'max_retries' => 2,
     'advance_notice_days' => 3,
     'bacs_storage_path' => 'bacs',
+    'portal_token_ttl_minutes' => 30,
+    'mandate_update_ttl_minutes' => 60,
 ];

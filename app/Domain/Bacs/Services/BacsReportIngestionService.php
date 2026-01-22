@@ -7,6 +7,7 @@ use App\Domain\Bacs\Models\BacsReport;
 use App\Domain\Bacs\Models\BacsReportItem;
 use App\Domain\Customers\Models\Customer;
 use App\Domain\Integrations\Models\ExternalLink;
+use App\Domain\Credit\Services\CreditTierService;
 use App\Domain\Mandates\Models\Mandate;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Webhooks\Services\WebhookOutboxService;
@@ -19,7 +20,8 @@ class BacsReportIngestionService
         private readonly AruddParser $aruddParser,
         private readonly AddacsParser $addacsParser,
         private readonly BacsMatcher $matcher,
-        private readonly WebhookOutboxService $webhookOutboxService
+        private readonly WebhookOutboxService $webhookOutboxService,
+        private readonly CreditTierService $creditTierService
     ) {
     }
 
@@ -106,6 +108,12 @@ class BacsReportIngestionService
         $policy = $this->retryPolicy($report);
         $customer = $payment->customer;
         $customer->load('creditProfile');
+        $creditProfile = $customer->creditProfile;
+
+        if ($creditProfile) {
+            $creditProfile->bounces_60d = $creditProfile->bounces_60d + 1;
+            $creditProfile->save();
+        }
 
         if ($payment->retry_count < $policy['max_retries']) {
             $payment->retry_count = $payment->retry_count + 1;
@@ -140,6 +148,10 @@ class BacsReportIngestionService
                 $creditProfile->lock_reason = 'Payment overdue / unpaid';
                 $creditProfile->save();
             }
+        }
+
+        if ($creditProfile) {
+            $this->creditTierService->assignTier($customer);
         }
 
         $site = $payment->sourceSite ?: $payment->merchant->sites()->first();
