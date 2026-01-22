@@ -13,12 +13,17 @@ class MerchantSite extends Model
         'merchant_id',
         'site_id',
         'base_url',
+        'platform',
         'api_key_hash',
         'webhook_secret',
+        'capabilities',
+        'settings_json',
     ];
 
     protected $casts = [
         'webhook_secret' => 'encrypted',
+        'capabilities' => 'array',
+        'settings_json' => 'array',
     ];
 
     public function merchant(): BelongsTo

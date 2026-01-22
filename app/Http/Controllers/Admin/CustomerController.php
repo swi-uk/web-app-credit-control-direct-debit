@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Domain\Customers\Models\Customer;
 use App\Domain\Customers\Models\CreditProfile;
+use App\Domain\Integrations\Models\ExternalLink;
 use App\Domain\Webhooks\Services\WebhookOutboxService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,9 +29,15 @@ class CustomerController extends Controller
     public function edit(Customer $customer): View
     {
         $customer->load('creditProfile');
+        $externalLinks = ExternalLink::with('merchantSite')
+            ->where('entity_type', 'customer')
+            ->where('entity_id', $customer->id)
+            ->orderBy('merchant_site_id')
+            ->get();
 
         return view('admin.customers.edit', [
             'customer' => $customer,
+            'externalLinks' => $externalLinks,
         ]);
     }
 
@@ -58,23 +65,27 @@ class CustomerController extends Controller
         }
         $creditProfile->save();
 
-        $payload = [
-            'event' => 'customer.credit.update',
-            'customer' => [
-                'id' => $customer->id,
-                'woocommerce_user_id' => $customer->external_woocommerce_user_id,
-                'email' => $customer->email,
-                'status' => $customer->status,
-                'credit' => [
-                    'limit' => $creditProfile->limit_amount,
+        $customer->merchant?->sites?->each(function ($site) use ($customer, $creditProfile) {
+            $externalLink = ExternalLink::where('merchant_site_id', $site->id)
+                ->where('entity_type', 'customer')
+                ->where('entity_id', $customer->id)
+                ->first();
+            $externalUserId = $externalLink?->external_id;
+            $externalType = $externalLink?->external_type ?? 'user';
+            $legacyWooUserId = $site->platform === 'woocommerce' ? $externalUserId : null;
+            $payload = [
+                'type' => 'customer.credit.update',
+                'data' => [
+                    'external_customer_id' => $externalUserId,
+                    'external_customer_type' => $externalType,
+                    'woocommerce_user_id' => $legacyWooUserId,
+                    'credit_status' => $customer->status,
+                    'credit_limit_amount' => $creditProfile->limit_amount,
+                    'credit_days_max' => $creditProfile->days_max,
                     'current_exposure' => $creditProfile->current_exposure_amount,
-                    'days_max' => $creditProfile->days_max,
-                    'days_default' => $creditProfile->days_default,
+                    'lock_reason' => $customer->lock_reason ?? '',
                 ],
-            ],
-        ];
-
-        $customer->merchant?->sites?->each(function ($site) use ($payload) {
+            ];
             $this->webhookOutboxService->enqueue($site, 'customer.credit.update', $payload);
         });
 

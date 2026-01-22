@@ -3,6 +3,7 @@
 namespace App\Domain\Customers\Models;
 
 use App\Domain\Customers\Models\CreditProfile;
+use App\Domain\Integrations\Models\ExternalLink;
 use App\Domain\Mandates\Models\Mandate;
 use App\Domain\Merchants\Models\Merchant;
 use App\Domain\Payments\Models\Payment;
@@ -20,7 +21,6 @@ class Customer extends Model
         'first_name',
         'last_name',
         'billing_address_json',
-        'external_woocommerce_user_id',
         'status',
         'lock_reason',
     ];
@@ -47,5 +47,11 @@ class Customer extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function externalLinks(): HasMany
+    {
+        return $this->hasMany(ExternalLink::class, 'entity_id')
+            ->where('entity_type', 'customer');
     }
 }

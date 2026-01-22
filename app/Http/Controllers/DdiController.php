@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Credit\Services\CreditExposureService;
+use App\Domain\Customers\Services\CustomerService;
 use App\Domain\Mandates\Services\MandateService;
 use App\Domain\Orders\Models\OrderLink;
 use App\Domain\Payments\Services\PaymentService;
@@ -20,7 +21,8 @@ class DdiController extends Controller
         private readonly MandateService $mandateService,
         private readonly PaymentService $paymentService,
         private readonly CreditExposureService $creditExposureService,
-        private readonly WebhookOutboxService $webhookOutboxService
+        private readonly WebhookOutboxService $webhookOutboxService,
+        private readonly CustomerService $customerService
     ) {
     }
 
@@ -66,32 +68,46 @@ class DdiController extends Controller
         $this->creditExposureService->recalculate($orderLink->customer);
         $orderLink->customer->load('creditProfile');
 
+        $creditProfile = $orderLink->customer->creditProfile;
+        $externalLink = $orderLink->customer->externalLinks()
+            ->where('merchant_site_id', $orderLink->merchant_site_id)
+            ->first();
+        $externalCustomerType = $externalLink?->external_type ?? 'user';
+        $externalCustomerId = $orderLink->external_customer_id
+            ?: $externalLink?->external_id
+            ?: $this->customerService->getExternalUserId($orderLink->customer, $orderLink->merchantSite, $externalCustomerType);
+        $legacyWooUserId = $orderLink->merchantSite->platform === 'woocommerce' ? $externalCustomerId : null;
+        $legacyOrderId = $orderLink->merchantSite->platform === 'woocommerce'
+            ? $orderLink->external_order_id
+            : null;
+
         $paymentPayload = [
-            'event' => 'payment.update',
-            'payment' => [
-                'id' => $payment->id,
-                'status' => $payment->status,
-                'amount' => $payment->amount,
-                'currency' => $payment->currency,
-                'woo_order_id' => $payment->woo_order_id,
-                'customer_id' => $payment->customer_id,
+            'type' => 'payment.update',
+            'data' => [
+                'external_order_id' => $orderLink->external_order_id,
+                'external_order_type' => $orderLink->external_order_type ?? 'order',
+                'external_customer_id' => $externalCustomerId,
+                'external_customer_type' => $externalCustomerType,
+                'order_id' => $legacyOrderId,
+                'woocommerce_user_id' => $legacyWooUserId,
+                'mandate_status' => $mandate->status,
+                'payment_status' => $payment->status,
+                'current_exposure' => $creditProfile?->current_exposure_amount,
+                'credit_status' => $orderLink->customer->status,
             ],
         ];
 
-        $creditProfile = $orderLink->customer->creditProfile;
         $creditPayload = [
-            'event' => 'customer.credit.update',
-            'customer' => [
-                'id' => $orderLink->customer->id,
-                'woocommerce_user_id' => $orderLink->customer->external_woocommerce_user_id,
-                'email' => $orderLink->customer->email,
-                'status' => $orderLink->customer->status,
-                'credit' => [
-                    'limit' => $creditProfile?->limit_amount,
-                    'current_exposure' => $creditProfile?->current_exposure_amount,
-                    'days_max' => $creditProfile?->days_max,
-                    'days_default' => $creditProfile?->days_default,
-                ],
+            'type' => 'customer.credit.update',
+            'data' => [
+                'external_customer_id' => $externalCustomerId,
+                'external_customer_type' => $externalCustomerType,
+                'woocommerce_user_id' => $legacyWooUserId,
+                'credit_status' => $orderLink->customer->status,
+                'credit_limit_amount' => $creditProfile?->limit_amount,
+                'credit_days_max' => $creditProfile?->days_max,
+                'current_exposure' => $creditProfile?->current_exposure_amount,
+                'lock_reason' => $orderLink->customer->lock_reason ?? '',
             ],
         ];
 

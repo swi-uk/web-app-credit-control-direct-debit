@@ -13,13 +13,16 @@ class OrderLinkService
         Customer $customer,
         array $order,
         array $returnUrls,
-        string $tokenHash
+        string $tokenHash,
+        ?string $externalCustomerId = null
     ): OrderLink {
         return OrderLink::create([
             'merchant_site_id' => $site->id,
             'customer_id' => $customer->id,
-            'woo_order_id' => $order['order_id'] ?? null,
-            'woo_order_key' => $order['order_key'] ?? null,
+            'external_order_type' => $order['external_order_type'] ?? 'order',
+            'external_order_id' => $order['external_order_id'] ?? null,
+            'external_order_key' => $order['external_order_key'] ?? null,
+            'external_customer_id' => $externalCustomerId,
             'amount' => $order['amount'] ?? null,
             'currency' => $order['currency'] ?? null,
             'redirect_token_hash' => $tokenHash,

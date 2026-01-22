@@ -18,6 +18,7 @@
             <tr>
                 <th>Merchant</th>
                 <th>Site ID</th>
+                <th>Platform</th>
                 <th>Base URL</th>
             </tr>
         </thead>
@@ -26,6 +27,7 @@
                 <tr>
                     <td>{{ $site->merchant?->name }}</td>
                     <td>{{ $site->site_id }}</td>
+                    <td>{{ $site->platform }}</td>
                     <td>{{ $site->base_url }}</td>
                 </tr>
             @endforeach

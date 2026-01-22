@@ -16,5 +16,6 @@ class Kernel extends HttpKernel
 
     protected $routeMiddleware = [
         'woo.auth' => AuthenticateMerchantSite::class,
+        'channel.auth' => AuthenticateMerchantSite::class,
     ];
 }

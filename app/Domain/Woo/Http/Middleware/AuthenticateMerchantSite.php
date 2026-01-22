@@ -22,11 +22,11 @@ class AuthenticateMerchantSite
             return response()->json(['error' => 'unauthorized'], 401);
         }
 
-        $merchantSiteId = $request->input('merchant_site_id');
-        if (!$merchantSiteId || $merchantSiteId !== $site->site_id) {
+        $siteId = $request->input('site_id') ?? $request->input('merchant_site_id');
+        if (!$siteId || $siteId !== $site->site_id) {
             return response()->json([
                 'error' => 'forbidden',
-                'message' => 'merchant_site_id mismatch',
+                'message' => 'site_id mismatch',
             ], 403);
         }
 

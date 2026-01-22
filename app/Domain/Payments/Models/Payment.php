@@ -5,6 +5,7 @@ namespace App\Domain\Payments\Models;
 use App\Domain\Customers\Models\Customer;
 use App\Domain\Mandates\Models\Mandate;
 use App\Domain\Merchants\Models\Merchant;
+use App\Domain\Merchants\Models\MerchantSite;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -14,7 +15,10 @@ class Payment extends Model
         'merchant_id',
         'customer_id',
         'mandate_id',
-        'woo_order_id',
+        'source_site_id',
+        'external_order_id',
+        'external_order_key',
+        'external_order_type',
         'amount',
         'currency',
         'due_date',
@@ -41,5 +45,10 @@ class Payment extends Model
     public function mandate(): BelongsTo
     {
         return $this->belongsTo(Mandate::class);
+    }
+
+    public function sourceSite(): BelongsTo
+    {
+        return $this->belongsTo(MerchantSite::class, 'source_site_id');
     }
 }

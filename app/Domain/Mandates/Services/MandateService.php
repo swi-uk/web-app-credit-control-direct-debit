@@ -13,7 +13,7 @@ class MandateService
         $customer = $orderLink->customer;
         $merchant = $orderLink->merchantSite->merchant;
 
-        $baseReference = 'DD-' . $customer->id . '-' . $orderLink->woo_order_id;
+        $baseReference = 'DD-' . $customer->id . '-' . $orderLink->external_order_id;
         $reference = $baseReference;
         $suffix = 2;
         while (Mandate::where('merchant_id', $merchant->id)->where('reference', $reference)->exists()) {

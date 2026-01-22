@@ -9,7 +9,7 @@ class CreditDecisionService
 {
     public function denyReason(Customer $customer, CreditProfile $creditProfile, float $amount): ?string
     {
-        if (in_array($customer->status, ['locked', 'blocked'], true)) {
+        if (in_array($customer->status, ['locked', 'blocked', 'restricted'], true)) {
             return $customer->status;
         }
 

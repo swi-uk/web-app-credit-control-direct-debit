@@ -49,5 +49,35 @@
             <button type="submit">Save</button>
         </div>
     </form>
+
+    <h2 style="margin-top: 32px;">Links</h2>
+    @if ($externalLinks->isEmpty())
+        <p>No external links for this customer.</p>
+    @else
+        <table style="width:100%; border-collapse: collapse; margin-top: 12px;">
+            <thead>
+                <tr>
+                    <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:6px;">Site</th>
+                    <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:6px;">Platform</th>
+                    <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:6px;">External ID</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($externalLinks as $link)
+                    <tr>
+                        <td style="border-bottom:1px solid #e5e7eb; padding:6px;">
+                            {{ $link->merchantSite?->site_id }}
+                        </td>
+                        <td style="border-bottom:1px solid #e5e7eb; padding:6px;">
+                            {{ $link->merchantSite?->platform }}
+                        </td>
+                        <td style="border-bottom:1px solid #e5e7eb; padding:6px;">
+                            {{ $link->external_id }}
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @endif
 </body>
 </html>

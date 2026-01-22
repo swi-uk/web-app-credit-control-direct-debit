@@ -12,8 +12,10 @@ class OrderLink extends Model
     protected $fillable = [
         'merchant_site_id',
         'customer_id',
-        'woo_order_id',
-        'woo_order_key',
+        'external_order_type',
+        'external_order_id',
+        'external_order_key',
+        'external_customer_id',
         'amount',
         'currency',
         'redirect_token_hash',

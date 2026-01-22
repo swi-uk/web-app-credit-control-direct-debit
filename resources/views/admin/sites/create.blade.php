@@ -6,7 +6,7 @@
     <style>
         body { font-family: Arial, sans-serif; max-width: 720px; margin: 40px auto; }
         label { display: block; margin-top: 12px; font-weight: bold; }
-        input[type="text"] { width: 100%; padding: 8px; }
+        input[type="text"], select { width: 100%; padding: 8px; }
         .notice { background: #f3f4f6; padding: 12px; border-radius: 6px; margin-top: 16px; }
     </style>
 </head>
@@ -42,6 +42,15 @@
 
         <label for="base_url">Base URL</label>
         <input id="base_url" name="base_url" type="text" value="{{ old('base_url') }}" required>
+
+        <label for="platform">Platform</label>
+        <select id="platform" name="platform">
+            @foreach (['woocommerce', 'shopify', 'custom', 'api'] as $platform)
+                <option value="{{ $platform }}" @selected(old('platform', 'woocommerce') === $platform)>
+                    {{ ucfirst($platform) }}
+                </option>
+            @endforeach
+        </select>
 
         <div style="margin-top: 16px;">
             <button type="submit">Create site</button>

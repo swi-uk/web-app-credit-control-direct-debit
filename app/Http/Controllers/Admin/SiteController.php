@@ -35,6 +35,7 @@ class SiteController extends Controller
             'merchant_name' => ['required', 'string', 'max:120'],
             'site_id' => ['required', 'string', 'max:120'],
             'base_url' => ['required', 'url'],
+            'platform' => ['nullable', 'string', 'in:woocommerce,shopify,custom,api'],
         ]);
 
         $merchant = Merchant::firstOrCreate(
@@ -49,6 +50,7 @@ class SiteController extends Controller
             'merchant_id' => $merchant->id,
             'site_id' => $validated['site_id'],
             'base_url' => rtrim($validated['base_url'], '/'),
+            'platform' => $validated['platform'] ?? 'woocommerce',
             'api_key_hash' => $this->tokenService->hash($apiKey),
             'webhook_secret' => $webhookSecret,
         ]);
