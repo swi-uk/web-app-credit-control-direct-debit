@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Domain\Audit\Models\AuditEvent;
-use App\Domain\Credit\Services\CreditTierService;
 use App\Domain\Payments\Models\Payment;
+use App\Domain\Payments\Services\PaymentStateService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -12,7 +12,7 @@ use Illuminate\View\View;
 
 class PaymentController extends Controller
 {
-    public function __construct(private readonly CreditTierService $creditTierService)
+    public function __construct(private readonly PaymentStateService $paymentStateService)
     {
     }
 
@@ -43,16 +43,12 @@ class PaymentController extends Controller
 
     public function markCollected(Payment $payment): RedirectResponse
     {
-        $payment->status = 'collected';
-        $payment->save();
+        $this->paymentStateService->transition($payment, 'collected', [
+            'source' => 'admin',
+        ]);
 
         $customer = $payment->customer;
         $customer->load('creditProfile');
-        if ($customer->creditProfile) {
-            $customer->creditProfile->successful_collections += 1;
-            $customer->creditProfile->save();
-            $this->creditTierService->assignTier($customer);
-        }
 
         AuditEvent::create([
             'merchant_id' => $payment->merchant_id,

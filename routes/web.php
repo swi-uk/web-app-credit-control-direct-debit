@@ -1,12 +1,15 @@
 <?php
 
+use App\Http\Controllers\Admin\ApiKeyController;
 use App\Http\Controllers\Admin\BacsReportController;
+use App\Http\Controllers\Admin\BillingController;
 use App\Http\Controllers\Admin\CreditTierController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\ExportController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\RefundController;
 use App\Http\Controllers\Admin\SiteController;
+use App\Http\Controllers\Admin\Ops\MonitoringController;
 use App\Http\Controllers\DdiController;
 use App\Http\Controllers\MandateUpdateController;
 use App\Http\Controllers\Portal\AuthController as PortalAuthController;
@@ -50,6 +53,14 @@ Route::prefix('admin')->group(function () {
 
     Route::get('export/payments.csv', [ExportController::class, 'payments'])->name('admin.export.payments');
     Route::get('export/customers.csv', [ExportController::class, 'customers'])->name('admin.export.customers');
+
+    Route::get('sites/{merchantSite}/api-keys', [ApiKeyController::class, 'index'])->name('admin.api_keys.index');
+    Route::get('sites/{merchantSite}/api-keys/create', [ApiKeyController::class, 'create'])->name('admin.api_keys.create');
+    Route::post('sites/{merchantSite}/api-keys/{merchantSiteApiKey}/revoke', [ApiKeyController::class, 'revoke'])
+        ->name('admin.api_keys.revoke');
+
+    Route::get('ops', [MonitoringController::class, 'index'])->name('admin.ops.index');
+    Route::get('billing', [BillingController::class, 'index'])->name('admin.billing.index');
 });
 
 Route::get('/portal/login', [PortalAuthController::class, 'showLogin'])->name('portal.login');

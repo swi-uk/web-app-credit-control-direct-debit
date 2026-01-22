@@ -20,6 +20,7 @@
                 <th>Site ID</th>
                 <th>Platform</th>
                 <th>Base URL</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -29,6 +30,7 @@
                     <td>{{ $site->site_id }}</td>
                     <td>{{ $site->platform }}</td>
                     <td>{{ $site->base_url }}</td>
+                    <td><a href="{{ route('admin.api_keys.index', $site) }}">API keys</a></td>
                 </tr>
             @endforeach
         </tbody>

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Domain\Merchants\Models\Merchant;
 use App\Domain\Merchants\Models\MerchantSite;
+use App\Domain\Security\Models\MerchantSiteApiKey;
 use App\Support\Tokens\TokenService;
 use Illuminate\Console\Command;
 
@@ -37,6 +38,13 @@ class CreateMerchantSite extends Command
             'base_url' => $baseUrl,
             'api_key_hash' => $this->tokenService->hash($apiKey),
             'webhook_secret' => $webhookSecret,
+        ]);
+
+        MerchantSiteApiKey::create([
+            'merchant_site_id' => $site->id,
+            'key_hash' => $this->tokenService->hash($apiKey),
+            'name' => 'Initial key',
+            'status' => 'active',
         ]);
 
         $this->info('Merchant site created: ' . $site->id);

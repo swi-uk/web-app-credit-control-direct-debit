@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Domain\Merchants\Models\Merchant;
 use App\Domain\Merchants\Models\MerchantSite;
+use App\Domain\Security\Models\MerchantSiteApiKey;
 use App\Support\Tokens\TokenService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -53,6 +54,13 @@ class SiteController extends Controller
             'platform' => $validated['platform'] ?? 'woocommerce',
             'api_key_hash' => $this->tokenService->hash($apiKey),
             'webhook_secret' => $webhookSecret,
+        ]);
+
+        MerchantSiteApiKey::create([
+            'merchant_site_id' => $site->id,
+            'key_hash' => $this->tokenService->hash($apiKey),
+            'name' => 'Initial key',
+            'status' => 'active',
         ]);
 
         return view('admin.sites.create', [

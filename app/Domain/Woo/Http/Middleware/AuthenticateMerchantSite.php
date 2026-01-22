@@ -3,6 +3,7 @@
 namespace App\Domain\Woo\Http\Middleware;
 
 use App\Domain\Merchants\Models\MerchantSite;
+use App\Domain\Security\Models\MerchantSiteApiKey;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,18 @@ class AuthenticateMerchantSite
         }
 
         $tokenHash = hash('sha256', $token);
-        $site = MerchantSite::where('api_key_hash', $tokenHash)->first();
+        $apiKey = MerchantSiteApiKey::where('key_hash', $tokenHash)
+            ->where('status', 'active')
+            ->first();
+        $site = $apiKey?->merchantSite;
+        if ($apiKey) {
+            $apiKey->last_used_at = now();
+            $apiKey->save();
+        }
+
+        if (!$site) {
+            $site = MerchantSite::where('api_key_hash', $tokenHash)->first();
+        }
         if (!$site) {
             return response()->json(['error' => 'unauthorized'], 401);
         }

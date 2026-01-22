@@ -8,6 +8,7 @@ use App\Domain\Bacs\Models\BacsReportItem;
 use App\Domain\Customers\Models\Customer;
 use App\Domain\Integrations\Models\ExternalLink;
 use App\Domain\Credit\Services\CreditTierService;
+use App\Domain\Payments\Services\PaymentStateService;
 use App\Domain\Mandates\Models\Mandate;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Webhooks\Services\WebhookOutboxService;
@@ -17,11 +18,11 @@ use Throwable;
 class BacsReportIngestionService
 {
     public function __construct(
-        private readonly AruddParser $aruddParser,
-        private readonly AddacsParser $addacsParser,
+        private readonly ReportParserRegistry $parserRegistry,
         private readonly BacsMatcher $matcher,
         private readonly WebhookOutboxService $webhookOutboxService,
-        private readonly CreditTierService $creditTierService
+        private readonly CreditTierService $creditTierService,
+        private readonly PaymentStateService $paymentStateService
     ) {
     }
 
@@ -33,9 +34,7 @@ class BacsReportIngestionService
 
         try {
             $contents = Storage::disk('local')->get($report->file_path);
-            $items = $report->type === 'ARUDD'
-                ? $this->aruddParser->parse($contents)
-                : $this->addacsParser->parse($contents);
+            $items = $this->parserRegistry->parse($report->type, $contents);
 
             foreach ($items as $data) {
                 $itemHash = $this->hashItem($data['raw'] ?? $data);
@@ -97,8 +96,11 @@ class BacsReportIngestionService
         $payment->failure_code = $item->code;
         $payment->failure_description = $item->description;
         $payment->reported_at = now();
-        $payment->status = 'unpaid_returned';
         $payment->save();
+
+        $this->paymentStateService->transition($payment, 'unpaid_returned', [
+            'report_item_id' => $item->id,
+        ]);
 
         $this->audit($payment, 'payment.unpaid_returned', [
             'code' => $item->code,
@@ -117,9 +119,13 @@ class BacsReportIngestionService
 
         if ($payment->retry_count < $policy['max_retries']) {
             $payment->retry_count = $payment->retry_count + 1;
-            $payment->status = 'retry_scheduled';
             $payment->next_retry_at = now()->addDays($policy['retry_days'][$payment->retry_count] ?? 3);
             $payment->save();
+
+            $this->paymentStateService->transition($payment, 'retry_scheduled', [
+                'report_item_id' => $item->id,
+                'retry_count' => $payment->retry_count,
+            ]);
 
             $this->audit($payment, 'payment.retry_scheduled', [
                 'retry_count' => $payment->retry_count,
@@ -131,8 +137,9 @@ class BacsReportIngestionService
                 $customer->save();
             }
         } else {
-            $payment->status = 'failed_final';
-            $payment->save();
+            $this->paymentStateService->transition($payment, 'failed_final', [
+                'report_item_id' => $item->id,
+            ]);
 
             $this->audit($payment, 'payment.failed_final', [
                 'retry_count' => $payment->retry_count,
@@ -156,7 +163,6 @@ class BacsReportIngestionService
 
         $site = $payment->sourceSite ?: $payment->merchant->sites()->first();
         if ($site) {
-            $this->webhookOutboxService->enqueue($site, 'payment.update', $this->buildPaymentPayload($payment, $site));
             $this->webhookOutboxService->enqueue($site, 'customer.credit.update', $this->buildCreditPayload($customer, $site));
             if ($customer->status === 'locked') {
                 $this->webhookOutboxService->enqueue($site, 'customer.lock', $this->buildCustomerLockPayload($customer, $site));
@@ -187,13 +193,11 @@ class BacsReportIngestionService
             ->get();
 
         foreach ($pendingPayments as $payment) {
-            $payment->status = 'cancelled';
-            $payment->save();
+            $this->paymentStateService->transition($payment, 'cancelled', [
+                'report_item_id' => $item->id,
+            ]);
 
-            $site = $payment->sourceSite ?: $payment->merchant->sites()->first();
-            if ($site) {
-                $this->webhookOutboxService->enqueue($site, 'payment.update', $this->buildPaymentPayload($payment, $site));
-            }
+            // payment.update is already enqueued by PaymentStateService.
         }
 
         if ($status === 'cancelled') {
@@ -215,37 +219,6 @@ class BacsReportIngestionService
         foreach ($sites as $site) {
             $this->webhookOutboxService->enqueue($site, 'customer.credit.update', $this->buildCreditPayload($customer, $site));
         }
-    }
-
-    private function buildPaymentPayload(Payment $payment, $site): array
-    {
-        $customer = $payment->customer;
-        $customer->load('creditProfile');
-        $externalLink = ExternalLink::where('merchant_site_id', $site->id)
-            ->where('entity_type', 'customer')
-            ->where('entity_id', $customer->id)
-            ->first();
-
-        $externalCustomerId = $externalLink?->external_id;
-        $externalCustomerType = $externalLink?->external_type ?? 'user';
-        $legacyWooUserId = $site->platform === 'woocommerce' ? $externalCustomerId : null;
-        $legacyOrderId = $site->platform === 'woocommerce' ? $payment->external_order_id : null;
-
-        return [
-            'type' => 'payment.update',
-            'data' => [
-                'external_order_id' => $payment->external_order_id,
-                'external_order_type' => $payment->external_order_type ?? 'order',
-                'external_customer_id' => $externalCustomerId,
-                'external_customer_type' => $externalCustomerType,
-                'order_id' => $legacyOrderId,
-                'woocommerce_user_id' => $legacyWooUserId,
-                'mandate_status' => $payment->mandate?->status,
-                'payment_status' => $payment->status,
-                'current_exposure' => $customer->creditProfile?->current_exposure_amount,
-                'credit_status' => $customer->status,
-            ],
-        ];
     }
 
     private function buildCreditPayload(Customer $customer, $site): array

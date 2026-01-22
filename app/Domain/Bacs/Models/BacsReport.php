@@ -17,6 +17,8 @@ class BacsReport extends Model
         'file_path',
         'status',
         'processed_at',
+        'remote_id',
+        'file_hash',
     ];
 
     protected $casts = [

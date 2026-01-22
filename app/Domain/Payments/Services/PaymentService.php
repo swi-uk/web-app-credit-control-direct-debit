@@ -5,6 +5,7 @@ namespace App\Domain\Payments\Services;
 use App\Domain\Mandates\Models\Mandate;
 use App\Domain\Orders\Models\OrderLink;
 use App\Domain\Payments\Models\Payment;
+use App\Domain\Payments\Models\PaymentEvent;
 
 class PaymentService
 {
@@ -15,7 +16,7 @@ class PaymentService
         $creditProfile = $customer->creditProfile;
         $daysDefault = (int) ($creditProfile?->days_default ?? 0);
 
-        return Payment::create([
+        $payment = Payment::create([
             'merchant_id' => $merchant->id,
             'customer_id' => $customer->id,
             'mandate_id' => $mandate->id,
@@ -29,5 +30,15 @@ class PaymentService
             'status' => 'scheduled',
             'retry_count' => 0,
         ]);
+
+        PaymentEvent::create([
+            'payment_id' => $payment->id,
+            'event_type' => 'scheduled',
+            'amount' => $payment->amount,
+            'occurred_at' => now(),
+            'metadata_json' => ['source' => 'created'],
+        ]);
+
+        return $payment;
     }
 }

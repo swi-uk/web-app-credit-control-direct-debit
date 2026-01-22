@@ -12,4 +12,5 @@ return [
     'bacs_storage_path' => 'bacs',
     'portal_token_ttl_minutes' => 30,
     'mandate_update_ttl_minutes' => 60,
+    'bureau_report_window_days' => 7,
 ];
