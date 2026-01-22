@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Domain\Submission\Jobs\SendBatchToBureauJob;
+use App\Domain\Bureau\Jobs\UploadBatchToSftpJob;
 use App\Domain\Submission\Models\SubmissionBatch;
 use Illuminate\Console\Command;
 
@@ -18,7 +18,7 @@ class SendSubmissionBatches extends Command
             ->get();
 
         foreach ($batches as $batch) {
-            SendBatchToBureauJob::dispatch($batch->id);
+            UploadBatchToSftpJob::dispatch($batch->id);
         }
 
         $this->info('Dispatched batches: ' . $batches->count());

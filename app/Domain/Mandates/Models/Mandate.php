@@ -26,6 +26,7 @@ class Mandate extends Model
         'addacs_code',
         'addacs_description',
         'reported_at',
+        'bureau_external_ref',
     ];
 
     protected $casts = [

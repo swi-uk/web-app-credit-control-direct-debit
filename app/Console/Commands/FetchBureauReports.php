@@ -29,9 +29,13 @@ class FetchBureauReports extends Command
         $imported = 0;
 
         foreach ($sites as $site) {
+            $mode = $site->settings_json['bureau_mode'] ?? null;
+            if ($mode !== 'api') {
+                continue;
+            }
             $connector = $this->bureauService->connectorFor($site);
-            $reports = $connector->fetchReports($from, $to);
-            foreach ($reports as $reportFile) {
+            $package = $connector->fetchInbound($from, $to);
+            foreach ($package->files as $reportFile) {
                 $contents = $connector->downloadReport($reportFile->remoteId);
                 $hash = hash('sha256', $contents);
                 $existingByHash = BacsReport::where('file_hash', $hash)

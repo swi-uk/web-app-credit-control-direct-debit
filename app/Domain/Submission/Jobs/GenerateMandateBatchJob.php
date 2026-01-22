@@ -17,16 +17,18 @@ class GenerateMandateBatchJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
-    public function __construct(private readonly int $batchId)
+    public function __construct(private readonly int $merchantSiteId)
     {
     }
 
     public function handle(SubmissionBatchService $service): void
     {
-        $batch = SubmissionBatch::find($this->batchId);
-        if (!$batch || $batch->status !== 'pending') {
-            return;
-        }
+        $batch = SubmissionBatch::create([
+            'merchant_site_id' => $this->merchantSiteId,
+            'type' => 'mandate',
+            'status' => 'pending',
+            'format_version' => 'v1',
+        ]);
 
         $service->generateMandateBatch($batch);
     }

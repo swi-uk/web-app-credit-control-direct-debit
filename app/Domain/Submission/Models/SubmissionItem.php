@@ -13,6 +13,7 @@ class SubmissionItem extends Model
         'entity_id',
         'status',
         'last_error',
+        'external_ref',
     ];
 
     public function batch(): BelongsTo

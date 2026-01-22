@@ -32,6 +32,7 @@ class Payment extends Model
         'failure_description',
         'reported_at',
         'next_retry_at',
+        'bureau_external_ref',
     ];
 
     protected $casts = [

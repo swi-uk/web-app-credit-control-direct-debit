@@ -7,6 +7,9 @@ use App\Console\Commands\DispatchWebhooks;
 use App\Console\Commands\FetchBureauReports;
 use App\Console\Commands\GenerateSubmissionBatches;
 use App\Console\Commands\GenerateInvoices;
+use App\Console\Commands\PollSftpReports;
+use App\Console\Commands\ArchiveSftpReports;
+use App\Console\Commands\PollBureauEvents;
 use App\Console\Commands\ImportBacsReport;
 use App\Console\Commands\RunPaymentRetries;
 use App\Console\Commands\SendAdvanceNotices;
@@ -26,6 +29,9 @@ class Kernel extends ConsoleKernel
         SendSubmissionBatches::class,
         FetchBureauReports::class,
         GenerateInvoices::class,
+        PollSftpReports::class,
+        ArchiveSftpReports::class,
+        PollBureauEvents::class,
     ];
 
     protected function schedule(Schedule $schedule): void
@@ -36,6 +42,9 @@ class Kernel extends ConsoleKernel
         $schedule->command('ccdd:generate-submission-batches')->hourly();
         $schedule->command('ccdd:send-submission-batches')->hourly();
         $schedule->command('ccdd:fetch-bureau-reports')->hourly();
+        $schedule->command('ccdd:poll-sftp-reports')->hourly();
+        $schedule->command('ccdd:archive-sftp-reports')->daily();
+        $schedule->command('ccdd:poll-bureau-events')->hourly();
         $schedule->command('ccdd:generate-invoices')->monthly();
     }
 }

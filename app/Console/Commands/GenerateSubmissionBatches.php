@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Domain\Submission\Jobs\GenerateMandateBatchJob;
 use App\Domain\Submission\Jobs\GeneratePaymentBatchJob;
-use App\Domain\Submission\Models\SubmissionBatch;
 use App\Domain\Merchants\Models\MerchantSite;
 use Illuminate\Console\Command;
 
@@ -19,22 +18,12 @@ class GenerateSubmissionBatches extends Command
         $count = 0;
 
         foreach ($sites as $site) {
-            $mandateBatch = SubmissionBatch::create([
-                'merchant_id' => $site->merchant_id,
-                'merchant_site_id' => $site->id,
-                'type' => 'mandate',
-                'status' => 'pending',
-            ]);
-            GenerateMandateBatchJob::dispatch($mandateBatch->id);
-
-            $paymentBatch = SubmissionBatch::create([
-                'merchant_id' => $site->merchant_id,
-                'merchant_site_id' => $site->id,
-                'type' => 'payment',
-                'status' => 'pending',
-            ]);
-            GeneratePaymentBatchJob::dispatch($paymentBatch->id);
-
+            $mode = $site->settings_json['bureau_mode'] ?? null;
+            if ($mode !== 'sftp') {
+                continue;
+            }
+            GenerateMandateBatchJob::dispatch($site->id);
+            GeneratePaymentBatchJob::dispatch($site->id);
             $count += 2;
         }
 

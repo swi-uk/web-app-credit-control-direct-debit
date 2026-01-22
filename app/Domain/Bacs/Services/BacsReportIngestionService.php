@@ -75,6 +75,10 @@ class BacsReportIngestionService
                 if ($report->type === 'ADDACS' && $match['type'] === 'mandate') {
                     $this->applyAddacs($report, $item, $match['model']);
                 }
+
+                if ($report->type === 'AUDDIS' && $match['type'] === 'mandate') {
+                    $this->applyAuddis($report, $item, $match['model']);
+                }
             }
 
             $report->status = 'processed';
@@ -217,7 +221,52 @@ class BacsReportIngestionService
             $sites = $mandate->merchant->sites()->get();
         }
         foreach ($sites as $site) {
+            $this->webhookOutboxService->enqueue($site, 'mandate.update', [
+                'type' => 'mandate.update',
+                'data' => [
+                    'mandate_reference' => $mandate->reference,
+                    'mandate_status' => $mandate->status,
+                ],
+            ]);
             $this->webhookOutboxService->enqueue($site, 'customer.credit.update', $this->buildCreditPayload($customer, $site));
+        }
+    }
+
+    private function applyAuddis(BacsReport $report, BacsReportItem $item, Mandate $mandate): void
+    {
+        $status = $this->resolveAuddisStatus($item->code, $item->description);
+        $mandate->status = $status;
+        $mandate->addacs_code = $item->code;
+        $mandate->addacs_description = $item->description;
+        $mandate->reported_at = now();
+        $mandate->save();
+
+        $this->auditMandate($mandate, 'mandate.auddis_update', [
+            'code' => $item->code,
+            'description' => $item->description,
+            'status' => $status,
+        ]);
+
+        if ($status === 'rejected') {
+            $pendingPayments = $mandate->payments()
+                ->whereIn('status', ['scheduled', 'submitted', 'processing', 'retry_scheduled'])
+                ->get();
+            foreach ($pendingPayments as $payment) {
+                $this->paymentStateService->transition($payment, 'cancelled', [
+                    'report_item_id' => $item->id,
+                ]);
+            }
+        }
+
+        $site = $mandate->merchant->sites()->first();
+        if ($site) {
+            $this->webhookOutboxService->enqueue($site, 'mandate.update', [
+                'type' => 'mandate.update',
+                'data' => [
+                    'mandate_reference' => $mandate->reference,
+                    'mandate_status' => $mandate->status,
+                ],
+            ]);
         }
     }
 
@@ -275,6 +324,19 @@ class BacsReportIngestionService
         if (str_contains($normalizedDescription, 'cancel')
             || in_array($normalizedCode, ['C', '1', '2', '3'], true)) {
             return 'cancelled';
+        }
+
+        return 'rejected';
+    }
+
+    private function resolveAuddisStatus(?string $code, ?string $description): string
+    {
+        $normalizedCode = strtoupper((string) $code);
+        $normalizedDescription = strtolower((string) $description);
+
+        if (str_contains($normalizedDescription, 'accept')
+            || in_array($normalizedCode, ['A', '1'], true)) {
+            return 'active';
         }
 
         return 'rejected';

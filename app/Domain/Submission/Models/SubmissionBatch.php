@@ -2,7 +2,6 @@
 
 namespace App\Domain\Submission\Models;
 
-use App\Domain\Merchants\Models\Merchant;
 use App\Domain\Merchants\Models\MerchantSite;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,18 +10,24 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class SubmissionBatch extends Model
 {
     protected $fillable = [
-        'merchant_id',
         'merchant_site_id',
         'type',
         'status',
+        'format_version',
         'file_path',
+        'file_sha256',
+        'record_count',
+        'generated_at',
+        'uploaded_at',
+        'last_error',
         'external_ref',
     ];
 
-    public function merchant(): BelongsTo
-    {
-        return $this->belongsTo(Merchant::class);
-    }
+    protected $casts = [
+        'record_count' => 'integer',
+        'generated_at' => 'datetime',
+        'uploaded_at' => 'datetime',
+    ];
 
     public function merchantSite(): BelongsTo
     {

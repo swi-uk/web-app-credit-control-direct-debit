@@ -6,7 +6,8 @@ class ReportParserRegistry
 {
     public function __construct(
         private readonly AruddParser $aruddParser,
-        private readonly AddacsParser $addacsParser
+        private readonly AddacsParser $addacsParser,
+        private readonly AuddisParser $auddisParser
     ) {
     }
 
@@ -14,6 +15,7 @@ class ReportParserRegistry
     {
         return match (strtoupper($type)) {
             'ADDACS' => $this->addacsParser->parse($contents),
+            'AUDDIS' => $this->auddisParser->parse($contents),
             default => $this->aruddParser->parse($contents),
         };
     }

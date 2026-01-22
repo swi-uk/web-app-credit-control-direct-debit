@@ -5,6 +5,7 @@ namespace App\Domain\Bureau\Connectors;
 use App\Domain\Bureau\Contracts\BureauConnectorInterface;
 use App\Domain\Bureau\DTO\BureauReportFile;
 use App\Domain\Bureau\DTO\BureauSubmitResult;
+use App\Domain\Bureau\DTO\InboundPackage;
 use App\Domain\Mandates\Models\Mandate;
 use App\Domain\Payments\Models\Payment;
 use Carbon\Carbon;
@@ -30,9 +31,9 @@ class AbsoluteSftpConnector implements BureauConnectorInterface
         ]);
     }
 
-    public function fetchReports(Carbon $from, Carbon $to): array
+    public function fetchInbound(Carbon $from, Carbon $to): InboundPackage
     {
-        return [];
+        return new InboundPackage(files: []);
     }
 
     public function downloadReport(string $remoteId): string

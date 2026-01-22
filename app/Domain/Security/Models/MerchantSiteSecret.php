@@ -10,16 +10,20 @@ class MerchantSiteSecret extends Model
 {
     protected $fillable = [
         'merchant_site_id',
-        'sftp_private_key',
-        'sftp_password',
-        'api_token',
+        'key',
+        'encrypted_value',
     ];
 
     protected $casts = [
-        'sftp_private_key' => 'encrypted',
-        'sftp_password' => 'encrypted',
-        'api_token' => 'encrypted',
+        'encrypted_value' => 'encrypted',
     ];
+
+    public static function valueFor(int $merchantSiteId, string $key): ?string
+    {
+        return static::where('merchant_site_id', $merchantSiteId)
+            ->where('key', $key)
+            ->value('encrypted_value');
+    }
 
     public function merchantSite(): BelongsTo
     {
