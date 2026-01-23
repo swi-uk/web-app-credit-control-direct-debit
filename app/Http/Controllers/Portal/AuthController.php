@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Portal;
 
 use App\Domain\Customers\Models\Customer;
 use App\Domain\Portal\Models\CustomerPortalToken;
+use App\Domain\Portal\Models\PortalSsoToken;
 use App\Support\Tokens\TokenService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -58,6 +59,26 @@ class AuthController extends Controller
     {
         $hash = $this->tokenService->hash($token);
         $record = CustomerPortalToken::where('token_hash', $hash)
+            ->whereNull('used_at')
+            ->where('expires_at', '>', now())
+            ->first();
+
+        if (!$record) {
+            return redirect()->route('portal.login');
+        }
+
+        $record->used_at = now();
+        $record->save();
+
+        session(['portal_customer_id' => $record->customer_id]);
+
+        return redirect()->route('portal.dashboard');
+    }
+
+    public function consumeSso(string $token): RedirectResponse
+    {
+        $hash = $this->tokenService->hash($token);
+        $record = PortalSsoToken::where('token_hash', $hash)
             ->whereNull('used_at')
             ->where('expires_at', '>', now())
             ->first();

@@ -16,10 +16,13 @@ class MerchantSite extends Model
         'site_id',
         'base_url',
         'platform',
+        'mode',
         'api_key_hash',
         'webhook_secret',
         'capabilities',
         'settings_json',
+        'previous_webhook_secret',
+        'webhook_secret_rotated_at',
     ];
 
     protected $casts = [

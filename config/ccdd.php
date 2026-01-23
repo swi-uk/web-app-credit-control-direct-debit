@@ -13,4 +13,5 @@ return [
     'portal_token_ttl_minutes' => 30,
     'mandate_update_ttl_minutes' => 60,
     'bureau_report_window_days' => 7,
+    'portal_sso_ttl_minutes' => 10,
 ];

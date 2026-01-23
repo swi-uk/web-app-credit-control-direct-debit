@@ -7,6 +7,8 @@ use App\Domain\Billing\Models\InvoiceLineItem;
 use App\Domain\Billing\Models\MerchantContact;
 use App\Domain\Billing\Models\MerchantSubscription;
 use App\Domain\Billing\Models\UsageRecord;
+use App\Domain\Partners\Models\PartnerCommission;
+use App\Domain\Partners\Models\PartnerMerchant;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
@@ -67,6 +69,7 @@ class BillingService
         $invoice->save();
 
         $this->sendInvoiceEmail($invoice);
+        $this->calculatePartnerCommission($invoice);
 
         return $invoice;
     }
@@ -137,5 +140,27 @@ class BillingService
         ], function ($message) use ($contact) {
             $message->to($contact->email)->subject('Your invoice');
         });
+    }
+
+    private function calculatePartnerCommission(Invoice $invoice): void
+    {
+        $partnerLink = PartnerMerchant::where('merchant_id', $invoice->merchant_id)->first();
+        if (!$partnerLink) {
+            return;
+        }
+
+        $amount = $partnerLink->commission_type === 'percentage'
+            ? ($invoice->subtotal * ((float) $partnerLink->commission_value / 100))
+            : (float) $partnerLink->commission_value;
+
+        PartnerCommission::create([
+            'partner_id' => $partnerLink->partner_id,
+            'merchant_id' => $invoice->merchant_id,
+            'period_start' => $invoice->period_start,
+            'period_end' => $invoice->period_end,
+            'basis' => 'volume',
+            'amount' => $amount,
+            'status' => 'calculated',
+        ]);
     }
 }

@@ -10,6 +10,7 @@ use App\Console\Commands\GenerateInvoices;
 use App\Console\Commands\PollSftpReports;
 use App\Console\Commands\ArchiveSftpReports;
 use App\Console\Commands\PollBureauEvents;
+use App\Console\Commands\ApplyRetentionPolicies;
 use App\Console\Commands\ImportBacsReport;
 use App\Console\Commands\RunPaymentRetries;
 use App\Console\Commands\SendAdvanceNotices;
@@ -32,6 +33,7 @@ class Kernel extends ConsoleKernel
         PollSftpReports::class,
         ArchiveSftpReports::class,
         PollBureauEvents::class,
+        ApplyRetentionPolicies::class,
     ];
 
     protected function schedule(Schedule $schedule): void
@@ -46,5 +48,6 @@ class Kernel extends ConsoleKernel
         $schedule->command('ccdd:archive-sftp-reports')->daily();
         $schedule->command('ccdd:poll-bureau-events')->hourly();
         $schedule->command('ccdd:generate-invoices')->monthly();
+        $schedule->command('ccdd:apply-retention')->weekly();
     }
 }

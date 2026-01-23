@@ -10,6 +10,9 @@ use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\RefundController;
 use App\Http\Controllers\Admin\SiteController;
 use App\Http\Controllers\Admin\Ops\MonitoringController;
+use App\Http\Controllers\Admin\Portfolio\DashboardController as PortfolioDashboardController;
+use App\Http\Controllers\Connectors\ShopifyController;
+use App\Http\Controllers\Onboarding\OnboardingController;
 use App\Http\Controllers\DdiController;
 use App\Http\Controllers\MandateUpdateController;
 use App\Http\Controllers\Portal\AuthController as PortalAuthController;
@@ -61,11 +64,13 @@ Route::prefix('admin')->group(function () {
 
     Route::get('ops', [MonitoringController::class, 'index'])->name('admin.ops.index');
     Route::get('billing', [BillingController::class, 'index'])->name('admin.billing.index');
+    Route::get('portfolio', [PortfolioDashboardController::class, 'index'])->name('admin.portfolio.index');
 });
 
 Route::get('/portal/login', [PortalAuthController::class, 'showLogin'])->name('portal.login');
 Route::post('/portal/login', [PortalAuthController::class, 'sendLink'])->name('portal.login.send');
 Route::get('/portal/auth/{token}', [PortalAuthController::class, 'consumeToken'])->name('portal.auth');
+Route::get('/portal/sso/{token}', [PortalAuthController::class, 'consumeSso'])->name('portal.sso');
 Route::post('/portal/logout', [PortalAuthController::class, 'logout'])->name('portal.logout');
 
 Route::get('/portal', [PortalDashboardController::class, 'index'])->name('portal.dashboard');
@@ -81,3 +86,10 @@ Route::get('/portal/documents/mandate/{mandate}', [PortalDocumentController::cla
 Route::get('/portal/documents/advance/{payment}', [PortalDocumentController::class, 'advanceNotice'])->name('portal.documents.advance');
 Route::get('/portal/documents/unpaid/{payment}', [PortalDocumentController::class, 'unpaidNotice'])->name('portal.documents.unpaid');
 Route::get('/portal/documents/refund/{refundRequest}', [PortalDocumentController::class, 'refundNotice'])->name('portal.documents.refund');
+
+Route::get('/onboarding', [OnboardingController::class, 'index'])->name('onboarding.index');
+Route::post('/onboarding/steps/{step}', [OnboardingController::class, 'update'])->name('onboarding.update');
+
+Route::get('/connectors/shopify/install', [ShopifyController::class, 'install'])->name('connectors.shopify.install');
+Route::get('/connectors/shopify/callback', [ShopifyController::class, 'callback'])->name('connectors.shopify.callback');
+Route::post('/connectors/shopify/webhook', [ShopifyController::class, 'webhook'])->name('connectors.shopify.webhook');

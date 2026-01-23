@@ -6,6 +6,8 @@ use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentEvent;
 use App\Domain\Credit\Services\CreditTierService;
 use App\Domain\Integrations\Models\ExternalLink;
+use App\Domain\Risk\Policies\RiskPolicyService;
+use App\Domain\Risk\Services\RiskScoringService;
 use App\Domain\Webhooks\Services\WebhookOutboxService;
 
 class PaymentStateService
@@ -23,7 +25,9 @@ class PaymentStateService
 
     public function __construct(
         private readonly CreditTierService $creditTierService,
-        private readonly WebhookOutboxService $webhookOutboxService
+        private readonly WebhookOutboxService $webhookOutboxService,
+        private readonly RiskScoringService $riskScoringService,
+        private readonly RiskPolicyService $riskPolicyService
     )
     {
     }
@@ -57,6 +61,8 @@ class PaymentStateService
                 $customer->creditProfile->save();
             }
             $this->creditTierService->assignTier($customer);
+            $score = $this->riskScoringService->score($customer);
+            $this->riskPolicyService->apply($customer, $score);
         }
 
         $site = $payment->sourceSite ?: $payment->merchant?->sites?->first();

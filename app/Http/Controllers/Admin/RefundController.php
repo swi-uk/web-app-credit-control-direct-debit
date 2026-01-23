@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Domain\Audit\Models\AuditEvent;
+use App\Domain\Documents\Services\DocumentService;
 use App\Domain\Refunds\Models\RefundRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,6 +13,9 @@ use Illuminate\View\View;
 
 class RefundController extends Controller
 {
+    public function __construct(private readonly DocumentService $documentService)
+    {
+    }
     public function index(Request $request): View
     {
         $status = $request->query('status');
@@ -35,6 +39,7 @@ class RefundController extends Controller
         $refundRequest->save();
 
         $this->audit($refundRequest, 'refund.approved');
+        $this->documentService->generateRefundNotice($refundRequest);
         $this->sendEmail($refundRequest, 'emails.refund_approved', 'Refund approved');
 
         return redirect()->route('admin.refunds.index');

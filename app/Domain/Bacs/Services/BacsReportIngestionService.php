@@ -9,6 +9,8 @@ use App\Domain\Customers\Models\Customer;
 use App\Domain\Integrations\Models\ExternalLink;
 use App\Domain\Credit\Services\CreditTierService;
 use App\Domain\Payments\Services\PaymentStateService;
+use App\Domain\Risk\Services\RiskScoringService;
+use App\Domain\Risk\Policies\RiskPolicyService;
 use App\Domain\Mandates\Models\Mandate;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Webhooks\Services\WebhookOutboxService;
@@ -22,7 +24,9 @@ class BacsReportIngestionService
         private readonly BacsMatcher $matcher,
         private readonly WebhookOutboxService $webhookOutboxService,
         private readonly CreditTierService $creditTierService,
-        private readonly PaymentStateService $paymentStateService
+        private readonly PaymentStateService $paymentStateService,
+        private readonly RiskScoringService $riskScoringService,
+        private readonly RiskPolicyService $riskPolicyService
     ) {
     }
 
@@ -163,6 +167,8 @@ class BacsReportIngestionService
 
         if ($creditProfile) {
             $this->creditTierService->assignTier($customer);
+            $score = $this->riskScoringService->score($customer);
+            $this->riskPolicyService->apply($customer, $score);
         }
 
         $site = $payment->sourceSite ?: $payment->merchant->sites()->first();
