@@ -2,13 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Direct Debit Link Expired</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 720px; margin: 40px auto; }
-    </style>
+    <title>Link expired</title>
+    <link rel="stylesheet" href="/css/tokens.css">
 </head>
 <body>
-    <h1>Link expired</h1>
-    <p>This Direct Debit link is no longer valid. Please return to checkout.</p>
+<div class="ddi-layout">
+    <div class="card ddi-card">
+        <div class="text-h2">This link has expired</div>
+        <p class="text-body">Please return to checkout to request a new Direct Debit setup link.</p>
+    </div>
+</div>
 </body>
 </html>

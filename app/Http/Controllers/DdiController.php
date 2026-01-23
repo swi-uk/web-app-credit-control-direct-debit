@@ -33,13 +33,20 @@ class DdiController extends Controller
             return view('ddi.expired');
         }
 
-        $merchantName = $orderLink->merchantSite?->merchant?->name ?? 'Merchant';
+        $merchant = $orderLink->merchantSite?->merchant;
+        $merchantName = $merchant?->name ?? 'Merchant';
+        $branding = $merchant?->branding_json ?? [];
+        $supportEmail = $branding['support_email'] ?? ($merchant?->settings_json['support_email'] ?? null);
+        $logoUrl = $branding['logo_url'] ?? null;
 
         return view('ddi.form', [
             'merchantName' => $merchantName,
             'amount' => $orderLink->amount,
             'currency' => $orderLink->currency,
             'token' => $token,
+            'supportEmail' => $supportEmail,
+            'logoUrl' => $logoUrl,
+            'primaryColor' => $branding['primary_color'] ?? null,
         ]);
     }
 
@@ -114,7 +121,15 @@ class DdiController extends Controller
         $this->webhookOutboxService->enqueue($orderLink->merchantSite, 'payment.update', $paymentPayload);
         $this->webhookOutboxService->enqueue($orderLink->merchantSite, 'customer.credit.update', $creditPayload);
 
-        return redirect()->to($orderLink->return_success_url);
+        if ($orderLink->return_success_url) {
+            return redirect()->to($orderLink->return_success_url);
+        }
+
+        $merchant = $orderLink->merchantSite?->merchant;
+        return view('ddi.success', [
+            'merchantName' => $merchant?->name ?? 'Merchant',
+            'supportEmail' => $merchant?->branding_json['support_email'] ?? null,
+        ]);
     }
 
     private function findValidOrderLink(string $token): ?OrderLink

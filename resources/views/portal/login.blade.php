@@ -1,38 +1,26 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Customer Portal Login</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; }
-        label { display: block; margin-top: 12px; font-weight: bold; }
-        input[type="email"] { width: 100%; padding: 8px; }
-    </style>
-</head>
-<body>
-    <h1>Customer Portal</h1>
+<x-layout.auth title="Portal Login">
+    <div class="text-h2">Customer Portal</div>
+    <p class="text-small">Sign in with a one-time link.</p>
 
     @if (!empty($sent))
-        <p>If your email exists in our system, a login link has been sent.</p>
+        <x-ui.alert type="success">
+            If your email exists in our system, a login link has been sent.
+        </x-ui.alert>
     @endif
 
     @if ($errors->any())
-        <div style="color:#b91c1c;">
+        <x-ui.alert type="danger">
             <ul>
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
-        </div>
+        </x-ui.alert>
     @endif
 
     <form method="POST" action="{{ route('portal.login.send') }}">
         @csrf
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" required>
-        <div style="margin-top: 16px;">
-            <button type="submit">Send login link</button>
-        </div>
+        <x-ui.input name="email" label="Email" type="email" />
+        <x-ui.button variant="primary">Send login link</x-ui.button>
     </form>
-</body>
-</html>
+</x-layout.auth>

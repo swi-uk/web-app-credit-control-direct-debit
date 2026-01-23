@@ -1,21 +1,11 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Merchant Onboarding</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border-bottom: 1px solid #e5e7eb; padding: 8px; text-align: left; }
-    </style>
-</head>
-<body>
-    <h1>Onboarding</h1>
+<x-layout.app title="Onboarding">
     @if (!$merchant)
-        <p>Provide a merchant_id query param to begin.</p>
+        <x-ui.empty-state>Provide a merchant_id query param to begin.</x-ui.empty-state>
     @else
-        <p>Merchant: {{ $merchant->name }}</p>
-        <table>
+        <x-ui.card>
+            <div class="text-body">Merchant: {{ $merchant->name }}</div>
+        </x-ui.card>
+        <x-ui.table>
             <thead>
                 <tr>
                     <th>Step</th>
@@ -27,18 +17,17 @@
                 @foreach ($steps as $step)
                     <tr>
                         <td>{{ $step->step_key }}</td>
-                        <td>{{ $step->status }}</td>
+                        <td><x-ui.badge :status="$step->status" /></td>
                         <td>
                             <form method="POST" action="{{ route('onboarding.update', $step) }}">
                                 @csrf
                                 <input type="hidden" name="status" value="done">
-                                <button type="submit">Mark done</button>
+                                <x-ui.button variant="secondary">Mark done</x-ui.button>
                             </form>
                         </td>
                     </tr>
                 @endforeach
             </tbody>
-        </table>
+        </x-ui.table>
     @endif
-</body>
-</html>
+</x-layout.app>

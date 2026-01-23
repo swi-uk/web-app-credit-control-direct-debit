@@ -2,54 +2,62 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Direct Debit Instruction</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 720px; margin: 40px auto; }
-        label { display: block; margin-top: 12px; font-weight: bold; }
-        input[type="text"] { width: 100%; padding: 8px; }
-        .error { color: #b91c1c; }
-        .summary { background: #f3f4f6; padding: 12px; border-radius: 6px; }
-    </style>
+    <title>Secure Direct Debit setup</title>
+    <link rel="stylesheet" href="/css/tokens.css">
 </head>
 <body>
-    <h1>Direct Debit Instruction</h1>
-    <div class="summary">
-        <div>Merchant: {{ $merchantName }}</div>
-        <div>Amount: {{ $amount }} {{ $currency }}</div>
+<div class="ddi-layout">
+    <div class="card ddi-card">
+        <div class="ddi-header">
+            <div class="ddi-logo">
+                @if ($logoUrl)
+                    <img src="{{ $logoUrl }}" alt="{{ $merchantName }}" width="32" height="32">
+                @else
+                    <span>DD</span>
+                @endif
+            </div>
+            <div>
+                <div class="text-h2">{{ $merchantName }}</div>
+                @if ($supportEmail)
+                    <div class="text-small">Support: {{ $supportEmail }}</div>
+                @endif
+            </div>
+        </div>
+        <div class="ddi-trust">
+            <span>🔒 Secure Direct Debit setup</span>
+        </div>
+
+        <x-ui.card>
+            <div class="text-body">Amount: <strong>{{ $amount }} {{ $currency }}</strong></div>
+        </x-ui.card>
+
+        @if ($errors->any())
+            <x-ui.alert type="danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </x-ui.alert>
+        @endif
+
+        <form method="POST" action="{{ url('/ddi/' . $token) }}">
+            @csrf
+            <x-ui.input name="account_holder_name" label="Account holder name" />
+            <x-ui.input name="sort_code" label="Sort code" />
+            <x-ui.input name="account_number" label="Account number" />
+            <x-ui.input name="bank_name" label="Bank name (optional)" />
+
+            <div class="form-field">
+                <label class="form-label">
+                    <input type="checkbox" name="consent" value="1" required>
+                    I confirm this Direct Debit mandate and consent to future collections.
+                </label>
+            </div>
+
+            <x-ui.button variant="primary">Submit mandate</x-ui.button>
+        </form>
     </div>
-
-    @if ($errors->any())
-        <div class="error">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    <form method="POST" action="{{ url('/ddi/' . $token) }}">
-        @csrf
-        <label for="account_holder_name">Account holder name</label>
-        <input id="account_holder_name" name="account_holder_name" type="text" value="{{ old('account_holder_name') }}" required>
-
-        <label for="sort_code">Sort code</label>
-        <input id="sort_code" name="sort_code" type="text" value="{{ old('sort_code') }}" required>
-
-        <label for="account_number">Account number</label>
-        <input id="account_number" name="account_number" type="text" value="{{ old('account_number') }}" required>
-
-        <label for="bank_name">Bank name (optional)</label>
-        <input id="bank_name" name="bank_name" type="text" value="{{ old('bank_name') }}">
-
-        <label>
-            <input type="checkbox" name="consent" value="1" required>
-            I confirm the Direct Debit mandate and consent.
-        </label>
-
-        <div style="margin-top: 16px;">
-            <button type="submit">Submit mandate</button>
-        </div>
-    </form>
+</div>
 </body>
 </html>

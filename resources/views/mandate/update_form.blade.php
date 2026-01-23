@@ -3,49 +3,39 @@
 <head>
     <meta charset="utf-8">
     <title>Update Bank Details</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 720px; margin: 40px auto; }
-        label { display: block; margin-top: 12px; font-weight: bold; }
-        input[type="text"] { width: 100%; padding: 8px; }
-        .error { color: #b91c1c; }
-    </style>
+    <link rel="stylesheet" href="/css/tokens.css">
 </head>
 <body>
-    <h1>Update Bank Details</h1>
-    <p>Customer: {{ $customer->email }}</p>
+<div class="ddi-layout">
+    <div class="card ddi-card">
+        <div class="text-h2">Update Bank Details</div>
+        <div class="text-small">Customer: {{ $customer->email }}</div>
 
-    @if ($errors->any())
-        <div class="error">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+        @if ($errors->any())
+            <x-ui.alert type="danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </x-ui.alert>
+        @endif
 
-    <form method="POST" action="{{ route('mandate.update.submit', $token) }}">
-        @csrf
-        <label for="account_holder_name">Account holder name</label>
-        <input id="account_holder_name" name="account_holder_name" type="text" value="{{ old('account_holder_name') }}" required>
-
-        <label for="sort_code">Sort code</label>
-        <input id="sort_code" name="sort_code" type="text" value="{{ old('sort_code') }}" required>
-
-        <label for="account_number">Account number</label>
-        <input id="account_number" name="account_number" type="text" value="{{ old('account_number') }}" required>
-
-        <label for="bank_name">Bank name (optional)</label>
-        <input id="bank_name" name="bank_name" type="text" value="{{ old('bank_name') }}">
-
-        <label>
-            <input type="checkbox" name="consent" value="1" required>
-            I confirm the Direct Debit mandate and consent.
-        </label>
-
-        <div style="margin-top: 16px;">
-            <button type="submit">Submit update</button>
-        </div>
-    </form>
+        <form method="POST" action="{{ route('mandate.update.submit', $token) }}">
+            @csrf
+            <x-ui.input name="account_holder_name" label="Account holder name" />
+            <x-ui.input name="sort_code" label="Sort code" />
+            <x-ui.input name="account_number" label="Account number" />
+            <x-ui.input name="bank_name" label="Bank name (optional)" />
+            <div class="form-field">
+                <label class="form-label">
+                    <input type="checkbox" name="consent" value="1" required>
+                    I confirm the Direct Debit mandate and consent.
+                </label>
+            </div>
+            <x-ui.button variant="primary">Submit update</x-ui.button>
+        </form>
+    </div>
+</div>
 </body>
 </html>

@@ -1,30 +1,17 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>API Keys</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border-bottom: 1px solid #e5e7eb; padding: 8px; text-align: left; }
-        .notice { background: #f3f4f6; padding: 12px; border-radius: 6px; margin-bottom: 12px; }
-    </style>
-</head>
-<body>
-    <h1>API Keys</h1>
-    <p>Site: {{ $site->site_id }}</p>
+<x-layout.app title="API Keys">
+    <x-ui.card>
+        <div class="text-body">Site: {{ $site->site_id }}</div>
+        @if (!empty($rawKey))
+            <x-ui.alert type="success">
+                <strong>New API key:</strong> <code>{{ $rawKey }}</code>
+            </x-ui.alert>
+        @endif
+        <x-ui.button variant="primary" type="button" onclick="location.href='{{ route('admin.api_keys.create', $site) }}'">
+            Generate new key
+        </x-ui.button>
+    </x-ui.card>
 
-    @if (!empty($rawKey))
-        <div class="notice">
-            <strong>New API key:</strong> <code>{{ $rawKey }}</code>
-        </div>
-    @endif
-
-    <p>
-        <a href="{{ route('admin.api_keys.create', $site) }}">Generate new key</a>
-    </p>
-
-    <table>
+    <x-ui.table>
         <thead>
             <tr>
                 <th>ID</th>
@@ -39,19 +26,18 @@
                 <tr>
                     <td>{{ $key->id }}</td>
                     <td>{{ $key->name }}</td>
-                    <td>{{ $key->status }}</td>
+                    <td><x-ui.badge :status="$key->status" /></td>
                     <td>{{ $key->last_used_at }}</td>
                     <td>
                         @if ($key->status === 'active')
                             <form method="POST" action="{{ route('admin.api_keys.revoke', [$site, $key]) }}">
                                 @csrf
-                                <button type="submit">Revoke</button>
+                                <x-ui.button variant="danger" type="submit">Revoke</x-ui.button>
                             </form>
                         @endif
                     </td>
                 </tr>
             @endforeach
         </tbody>
-    </table>
-</body>
-</html>
+    </x-ui.table>
+</x-layout.app>

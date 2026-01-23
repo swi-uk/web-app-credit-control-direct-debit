@@ -1,18 +1,11 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Credit Tiers</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 1100px; margin: 40px auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border-bottom: 1px solid #e5e7eb; padding: 8px; text-align: left; }
-    </style>
-</head>
-<body>
-    <h1>Credit Tiers</h1>
-    <p><a href="{{ route('admin.credit_tiers.create') }}">Create tier</a></p>
-    <table>
+<x-layout.app title="Credit Tiers">
+    <x-ui.card>
+        <x-ui.button variant="primary" type="button" onclick="location.href='{{ route('admin.credit_tiers.create') }}'">
+            Create tier
+        </x-ui.button>
+    </x-ui.card>
+
+    <x-ui.table>
         <thead>
             <tr>
                 <th>Merchant</th>
@@ -48,6 +41,5 @@
                 </tr>
             @endforeach
         </tbody>
-    </table>
-</body>
-</html>
+    </x-ui.table>
+</x-layout.app>

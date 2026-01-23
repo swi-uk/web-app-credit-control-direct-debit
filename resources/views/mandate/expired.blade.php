@@ -2,13 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Update Link Expired</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 720px; margin: 40px auto; }
-    </style>
+    <title>Link expired</title>
+    <link rel="stylesheet" href="/css/tokens.css">
 </head>
 <body>
-    <h1>Link expired</h1>
-    <p>This update link is no longer valid.</p>
+<div class="ddi-layout">
+    <div class="card ddi-card">
+        <div class="text-h2">Link expired</div>
+        <p class="text-body">This update link is no longer valid.</p>
+    </div>
+</div>
 </body>
 </html>

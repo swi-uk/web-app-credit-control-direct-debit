@@ -1,77 +1,48 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Edit Credit Tier</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 720px; margin: 40px auto; }
-        label { display: block; margin-top: 12px; font-weight: bold; }
-        input[type="text"], select { width: 100%; padding: 8px; }
-    </style>
-</head>
-<body>
-    <h1>Edit Credit Tier</h1>
-    <p><a href="{{ route('admin.credit_tiers.index') }}">Back to tiers</a></p>
-
+<x-layout.app title="Edit Credit Tier">
     @if ($errors->any())
-        <div style="color:#b91c1c;">
+        <x-ui.alert type="danger">
             <ul>
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
-        </div>
+        </x-ui.alert>
     @endif
 
-    <form method="POST" action="{{ route('admin.credit_tiers.update', $tier) }}">
-        @csrf
-        <label for="merchant_id">Merchant</label>
-        <select id="merchant_id" name="merchant_id" required>
-            @foreach ($merchants as $merchant)
-                <option value="{{ $merchant->id }}" @selected($tier->merchant_id === $merchant->id)>
-                    {{ $merchant->name }}
-                </option>
-            @endforeach
-        </select>
+    <x-ui.card>
+        <form method="POST" action="{{ route('admin.credit_tiers.update', $tier) }}">
+            @csrf
+            <x-ui.select name="merchant_id" label="Merchant">
+                @foreach ($merchants as $merchant)
+                    <option value="{{ $merchant->id }}" @selected($tier->merchant_id === $merchant->id)>
+                        {{ $merchant->name }}
+                    </option>
+                @endforeach
+            </x-ui.select>
+            <x-ui.input name="name" label="Name" :value="$tier->name" />
+            <x-ui.input name="max_exposure_amount" label="Max exposure amount" :value="$tier->max_exposure_amount" />
+            <x-ui.input name="max_days" label="Max days" :value="$tier->max_days" />
+            <x-ui.input name="priority" label="Priority" :value="$tier->priority" />
 
-        <label for="name">Name</label>
-        <input id="name" name="name" type="text" value="{{ old('name', $tier->name) }}" required>
+            <div class="form-field">
+                <label class="form-label">
+                    <input type="checkbox" name="is_default" value="1" @checked($tier->is_default)>
+                    Default tier
+                </label>
+            </div>
+            <div class="form-field">
+                <label class="form-label">
+                    <input type="checkbox" name="is_active" value="1" @checked($tier->is_active)>
+                    Active
+                </label>
+            </div>
 
-        <label for="max_exposure_amount">Max exposure amount</label>
-        <input id="max_exposure_amount" name="max_exposure_amount" type="text" value="{{ old('max_exposure_amount', $tier->max_exposure_amount) }}" required>
+            <div class="text-h3">Eligibility Rules</div>
+            <x-ui.input name="min_successful_collections" label="Min successful collections" :value="$rule?->min_successful_collections ?? 0" />
+            <x-ui.input name="max_bounces_60d" label="Max bounces (60d)" :value="$rule?->max_bounces_60d ?? 999" />
+            <x-ui.input name="min_account_age_days" label="Min account age days" :value="$rule?->min_account_age_days ?? 0" />
 
-        <label for="max_days">Max days</label>
-        <input id="max_days" name="max_days" type="text" value="{{ old('max_days', $tier->max_days) }}" required>
-
-        <label for="priority">Priority</label>
-        <input id="priority" name="priority" type="text" value="{{ old('priority', $tier->priority) }}" required>
-
-        <label>
-            <input type="checkbox" name="is_default" value="1" @checked($tier->is_default)>
-            Default tier
-        </label>
-
-        <label>
-            <input type="checkbox" name="is_active" value="1" @checked($tier->is_active)>
-            Active
-        </label>
-
-        <h3>Eligibility Rules</h3>
-        <label for="min_successful_collections">Min successful collections</label>
-        <input id="min_successful_collections" name="min_successful_collections" type="text"
-               value="{{ old('min_successful_collections', $rule?->min_successful_collections ?? 0) }}">
-
-        <label for="max_bounces_60d">Max bounces (60d)</label>
-        <input id="max_bounces_60d" name="max_bounces_60d" type="text"
-               value="{{ old('max_bounces_60d', $rule?->max_bounces_60d ?? 999) }}">
-
-        <label for="min_account_age_days">Min account age days</label>
-        <input id="min_account_age_days" name="min_account_age_days" type="text"
-               value="{{ old('min_account_age_days', $rule?->min_account_age_days ?? 0) }}">
-
-        <div style="margin-top: 16px;">
-            <button type="submit">Save tier</button>
-        </div>
-    </form>
-</body>
-</html>
+            <x-ui.button variant="primary">Save tier</x-ui.button>
+        </form>
+    </x-ui.card>
+</x-layout.app>
